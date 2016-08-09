@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
  * 
  */
 
-public class GenerateImages {
+public class GenerateImages2 {
 
-    private static Logger m_logger = LoggerFactory.getLogger(GenerateImages.class);
+    private static Logger m_logger = LoggerFactory.getLogger(GenerateImages2.class);
 
     public enum HORIZONTAL_POSITION_HINT {
         LEFT, CENTER, RIGHT
@@ -71,12 +71,6 @@ public class GenerateImages {
     private String topCenterWatermarkImage;
     private String topCenterWatermarkText;
 
-    private String topLeftWatermarkImage;
-    private String bottomLeftWatermarkImage;
-    
-    
-
-    private String bgImage;
     private Color  bgColor;
     
     /*
@@ -100,7 +94,7 @@ public class GenerateImages {
     
     
     // Default Constructor
-    public GenerateImages() {
+    public GenerateImages2() {
     }
 
     public void convert() throws Exception {
@@ -124,7 +118,7 @@ public class GenerateImages {
             m_logger.info("-------------------------------------------------------------------------------------------------------");
             m_logger.info("Creating Logo file {} from {} to {}", file.getName(), source.getAbsolutePath(), output.getAbsolutePath());
             
-//            createLogoFiles(source, output, file.getName());
+            createLogoFiles(source, output, file.getName());
             
             
         }        
@@ -140,7 +134,7 @@ public class GenerateImages {
             boolean stretched = processImageForContents(source, output, file.getName(), HORIZONTAL_POSITION_HINT.CENTER, VERTICAL_POSITION_HINT.CENTER, fileSuffix , true);
             
             if ( stretched ) 
-                processImageForContents(source, output, file.getName(), HORIZONTAL_POSITION_HINT.CENTER, VERTICAL_POSITION_HINT.CENTER, fileSuffix + "-org", false);
+                processImageForContents(source, output, file.getName(), HORIZONTAL_POSITION_HINT.CENTER, VERTICAL_POSITION_HINT.CENTER, fileSuffix + "-2", false);
             index++;
         }
 
@@ -149,9 +143,13 @@ public class GenerateImages {
     }
 
     private void createLogoFiles(File sourceDir, File outputDir, String sourceFileName ) throws Exception {
+    
 
         // load source images
         BufferedImage imageSource = ImageIO.read(new File(sourceDir, sourceFileName));
+        
+
+        
     }
     
     
@@ -220,47 +218,27 @@ public class GenerateImages {
          * 
          */
         
-        Color backGroundColor = null;
-        
         if ( bgColor != null) {
-//            Color bg = new Color(255, 255, 255);
-            backGroundColor = bgColor;
-            BasicDrawingRoutine.drawBackgroundColor(imageBase, backGroundColor);
+            Color bg = new Color(255, 255, 255);
+            BasicDrawingRoutine.drawBackgroundColor(imageBase, bgColor);
         } else {
             Color dominantColor = ImageUtil.getBackgroundColor(imageSource);
             
-            backGroundColor = new Color(255, 255, 255);
+            bgColor = new Color(255, 255, 255);
             if ( ImageUtil.isGray(dominantColor) ) {
                 if ( dominantColor.getRed() > 200 ) // avoid dark   
-                    backGroundColor = dominantColor;
+                    bgColor = dominantColor;
             }
             
-            BasicDrawingRoutine.drawBackgroundColor(imageBase, backGroundColor);            
-
+            BasicDrawingRoutine.drawBackgroundColor(imageBase, bgColor);            
         }
+        /*
+         * 
+         */
+        
+        
         Graphics g = imageBase.getGraphics();
-        
-        
-        /*
-         * Transparent testing
-         * 
-         * 
-         */
-        
-        
-//        ImageUtil.setBackgroundTransparentColor(imageSource, backGroundColor.getRGB());
-//
-//        BufferedImage imageTestingBack = ImageIO.read(new File("D:\\LivingLux\\images-lab\\background-test.png"));
-//        
-//        BasicDrawingRoutine.drawAnotherImage(g, imageTestingBack, 0, 0, targetW, targetH,  null);
-        
-        /*
-         * 
-         */
-        
-        
-        
-        BasicDrawingRoutine.drawAnotherImage(g, imageSource, leftTopPos[0], leftTopPos[1], sourceW, sourceH,  backGroundColor);
+        BasicDrawingRoutine.drawAnotherImage(g, imageSource, leftTopPos[0], leftTopPos[1], sourceW, sourceH,  bgColor);
 
 
         /*
@@ -278,17 +256,6 @@ public class GenerateImages {
         }
         
         
-        /*
-         * Apply Themes 
-         * 
-         */
-        
-        
-        
-//        Themes.applyBasic(imageBase);
-        
-        
-        
         
         /*
          * Draw the transparent text style could be Font.ITALIC | Font.BOLD
@@ -300,7 +267,7 @@ public class GenerateImages {
 
         if (topCenterWatermarkText != null) {
             Color textColor = Color.BLACK;
-            BasicDrawingRoutine.drawTransparentText_TopCenter(g, targetW, targetH, topCenterWatermarkText.toUpperCase(), 30, textColor, 0.6f, Font.BOLD);
+            BasicDrawingRoutine.drawTransparentText_TopCenter(g, targetW, targetH, topCenterWatermarkText, 40, textColor, 0.5f, Font.BOLD);
         }        
         
         // BasicDrawingRoutine.drawTransparentImage(g, targetW, targetH,
@@ -315,17 +282,8 @@ public class GenerateImages {
             BasicDrawingRoutine.drawTransparentImage_TopCenter(imageBase, imageWatermark, 0.5f);
         }
 
-        if ( topLeftWatermarkImage != null ) {
-            BufferedImage imageWatermark = ImageIO.read(new File(topLeftWatermarkImage));
-            BasicDrawingRoutine.drawTransparentImage_TopLeft(imageBase, imageWatermark, 0.8f);
-            
-        }
         
-        if ( bottomLeftWatermarkImage != null ) {
-            BufferedImage imageWatermark = ImageIO.read(new File(bottomLeftWatermarkImage));
-            BasicDrawingRoutine.drawTransparentImage_BottomLeft(imageBase, imageWatermark, 0.6f);
-            
-        }
+        
         
         /*
          * save to file
@@ -495,24 +453,6 @@ public class GenerateImages {
         this.topCenterWatermarkImage = topCenterWatermarkImage;
     }
 
-    
-    
-    public String getBottomLeftWatermarkImage() {
-        return bottomLeftWatermarkImage;
-    }
-
-    public void setBottomLeftWatermarkImage(String bottomLeftWatermarkImage) {
-        this.bottomLeftWatermarkImage = bottomLeftWatermarkImage;
-    }
-
-    public String getTopLeftWatermarkImage() {
-        return topLeftWatermarkImage;
-    }
-
-    public void setTopLeftWatermarkImage(String topLeftWatermarkImage) {
-        this.topLeftWatermarkImage = topLeftWatermarkImage;
-    }
-
     public boolean isRenameOutFiles() {
         return renameOutFiles;
     }
@@ -536,14 +476,8 @@ public class GenerateImages {
     public void setResizeBiggerSource(boolean resizeBiggerSource) {
         this.resizeBiggerSource = resizeBiggerSource;
     }
-
-    public String getBgImage() {
-        return bgImage;
-    }
-
-    public void setBgImage(String bgImage) {
-        this.bgImage = bgImage;
-    }
+    
+    
 
     public int getTargetWidth() {
         return targetWidth;
@@ -658,7 +592,7 @@ public class GenerateImages {
 
     public static void process_Nike_Testing() throws Exception {
 
-        GenerateImages resize = new GenerateImages();
+        GenerateImages2 resize = new GenerateImages2();
 
         // resize.setSourceDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black");
         // resize.setOutputDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black\\output");
@@ -689,7 +623,7 @@ public class GenerateImages {
     
     public static void process_Nike_FlyKnitRacer() throws Exception {
 
-        GenerateImages resize = new GenerateImages();
+        GenerateImages2 resize = new GenerateImages2();
 
         // resize.setSourceDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black");
         // resize.setOutputDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black\\output");
@@ -711,7 +645,7 @@ public class GenerateImages {
     
     public static void process_Nike_BigSwoosh() throws Exception {
 
-        GenerateImages resize = new GenerateImages();
+        GenerateImages2 resize = new GenerateImages2();
 
         // resize.setSourceDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black");
         // resize.setOutputDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black\\output");
@@ -732,7 +666,7 @@ public class GenerateImages {
 
     public static void process_SAS() throws Exception {
 
-        GenerateImages resize = new GenerateImages();
+        GenerateImages2 resize = new GenerateImages2();
 
         // Nike FlyKnit
         resize.setSourceDirectory("D:\\LivingLux\\products\\SAS\\bounce");

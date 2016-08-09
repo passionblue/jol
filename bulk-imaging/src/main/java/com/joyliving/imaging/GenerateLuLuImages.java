@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
  * 
  */
 
-public class GenerateImages {
+public class GenerateLuLuImages {
 
-    private static Logger m_logger = LoggerFactory.getLogger(GenerateImages.class);
+    private static Logger m_logger = LoggerFactory.getLogger(GenerateLuLuImages.class);
 
     public enum HORIZONTAL_POSITION_HINT {
         LEFT, CENTER, RIGHT
@@ -100,7 +100,7 @@ public class GenerateImages {
     
     
     // Default Constructor
-    public GenerateImages() {
+    public GenerateLuLuImages() {
     }
 
     public void convert() throws Exception {
@@ -137,13 +137,10 @@ public class GenerateImages {
             
             
             String fileSuffix = ""+index;
-            boolean stretched = processImageForContents(source, output, file.getName(), HORIZONTAL_POSITION_HINT.CENTER, VERTICAL_POSITION_HINT.CENTER, fileSuffix , true);
+            boolean stretched = processImageForSmall(source, output, file.getName(), HORIZONTAL_POSITION_HINT.CENTER, VERTICAL_POSITION_HINT.CENTER, fileSuffix , "_main");
             
-            if ( stretched ) 
-                processImageForContents(source, output, file.getName(), HORIZONTAL_POSITION_HINT.CENTER, VERTICAL_POSITION_HINT.CENTER, fileSuffix + "-org", false);
             index++;
         }
-
 
     
     }
@@ -156,7 +153,7 @@ public class GenerateImages {
     
     
     
-    private boolean processImageForContents(File sourceDir, File outputDir, String sourceFileName, HORIZONTAL_POSITION_HINT hHint, VERTICAL_POSITION_HINT vHint, String suffix, boolean stretchIfConditionMet) throws Exception {
+    private boolean processImageForSmall(File sourceDir, File outputDir, String sourceFileName, HORIZONTAL_POSITION_HINT hHint, VERTICAL_POSITION_HINT vHint, String suffix, String nameSuffice) throws Exception {
 
         // load source images
         BufferedImage imageSource = ImageIO.read(new File(sourceDir, sourceFileName));
@@ -169,45 +166,32 @@ public class GenerateImages {
         /*
          * Filter out images that are obviously not for this processing
          */
-        if (imageSource.getHeight() < 200) {
-            return false;
-        }
-
         boolean imageStretched = false;
-        
-        //only compare width. 
-        if ( stretchIfConditionMet && sourceW > targetW ) {
-            sourceH = (int) (   ((double) sourceH )* ((double) targetW ) /((double) sourceW ) );
-            sourceW = targetW;
-            Image simageSource = imageSource.getScaledInstance(sourceW, sourceH, Image.SCALE_SMOOTH);
-            imageSource = ImageUtil.toBufferedImage(simageSource);
-            
-            m_logger.info("#### SCALED SMALLER " + sourceFileName );
+        Image stretchedImage = null;
+        if (imageSource.getWidth() > 500) {
 
-            imageStretched = true;
-        }
-        
-        /*
-         * Stretch out smaller image to fit
-         */
-        if ( stretchIfConditionMet && imageSource.getWidth() < stretchCutoff ) {
-
-            int originalSourceW = sourceW;
-            sourceW = targetW - stretchPadding;
-
-            sourceH = (int) (   ((double) sourceH )* ((double) sourceW ) /((double) originalSourceW ) );
-            Image simageSource = imageSource.getScaledInstance(sourceW, sourceH, Image.SCALE_SMOOTH);
-            imageSource = ImageUtil.toBufferedImage(simageSource);
             
-            m_logger.info("#### STRETCHED " + sourceFileName );
+            //only compare width. 
+            int sourceStretchW = 600;
+            sourceH = (int) (   ((double) sourceH )* ((double) sourceStretchW ) /((double) sourceW ) );
+            sourceW = sourceStretchW;
+            stretchedImage= imageSource.getScaledInstance(sourceW, sourceH, Image.SCALE_SMOOTH);
+        
+        } else {
+
+            int sourceStretchW = 600;
+
+            sourceH = (int) (   ((double) sourceH )* ((double) sourceStretchW ) /((double) sourceW ) );
+            sourceW = sourceStretchW;
+            stretchedImage= imageSource.getScaledInstance(sourceW, sourceH, Image.SCALE_SMOOTH);
             
-            imageStretched = true;
         }
+
+        imageSource = ImageUtil.toBufferedImage(stretchedImage);
+
+        imageStretched = true;
         
-        if (variableHeight) {
-            targetH = sourceH + paddingSize * 2;
-        }
-        
+         
         int[] leftTopPos = calculatePosition(targetW, targetH, sourceW, sourceH, hHint, vHint, topPadding);
 
         /*
@@ -222,22 +206,22 @@ public class GenerateImages {
         
         Color backGroundColor = null;
         
-        if ( bgColor != null) {
-//            Color bg = new Color(255, 255, 255);
-            backGroundColor = bgColor;
-            BasicDrawingRoutine.drawBackgroundColor(imageBase, backGroundColor);
-        } else {
-            Color dominantColor = ImageUtil.getBackgroundColor(imageSource);
-            
-            backGroundColor = new Color(255, 255, 255);
-            if ( ImageUtil.isGray(dominantColor) ) {
-                if ( dominantColor.getRed() > 200 ) // avoid dark   
-                    backGroundColor = dominantColor;
-            }
-            
-            BasicDrawingRoutine.drawBackgroundColor(imageBase, backGroundColor);            
-
-        }
+//        if ( bgColor != null) {
+////            Color bg = new Color(255, 255, 255);
+//            backGroundColor = bgColor;
+//            BasicDrawingRoutine.drawBackgroundColor(imageBase, backGroundColor);
+//        } else {
+//            Color dominantColor = ImageUtil.getBackgroundColor(imageSource);
+//            
+//            backGroundColor = new Color(255, 255, 255);
+//            if ( ImageUtil.isGray(dominantColor) ) {
+//                if ( dominantColor.getRed() > 200 ) // avoid dark   
+//                    backGroundColor = dominantColor;
+//            }
+//            
+//            BasicDrawingRoutine.drawBackgroundColor(imageBase, backGroundColor);            
+//
+//        }
         Graphics g = imageBase.getGraphics();
         
         
@@ -277,7 +261,9 @@ public class GenerateImages {
             }
         }
         
+        BasicDrawingBorders.drawSingleLine(g,   targetW, targetH, 1.0f, Color.BLACK , 1.0f);
         
+
         /*
          * Apply Themes 
          * 
@@ -295,12 +281,12 @@ public class GenerateImages {
          */
         if (watermarkText != null) {
             Color textColor = Color.BLACK;
-            BasicDrawingRoutine.drawTransparentText_BottomLeft(g, targetW, targetH, watermarkText, 20, textColor, 0.5f, Font.BOLD);
+            BasicDrawingRoutine.drawTransparentText_BottomLeft(g, targetW, targetH, watermarkText, 10, textColor, 0.9f, Font.BOLD);
         }
 
         if (topCenterWatermarkText != null) {
             Color textColor = Color.BLACK;
-            BasicDrawingRoutine.drawTransparentText_TopCenter(g, targetW, targetH, topCenterWatermarkText.toUpperCase(), 30, textColor, 0.6f, Font.BOLD);
+            BasicDrawingRoutine.drawTransparentText_TopCenter(g, targetW, targetH, topCenterWatermarkText.toUpperCase(), 20, textColor, 1.0f, Font.BOLD);
         }        
         
         // BasicDrawingRoutine.drawTransparentImage(g, targetW, targetH,
@@ -343,7 +329,7 @@ public class GenerateImages {
             // FileNameUtils.
 
             String ext = FilenameUtils.getExtension(sourceFileName);
-            outputFileName = parentName + "_" + suffix + "." + ext;
+            outputFileName = parentName + "_" + suffix+ nameSuffice + "." + ext;
         }
         
         ImageIO.write(imageBase, "PNG", new File(outputDir, outputFileName +".PNG"));
@@ -658,7 +644,7 @@ public class GenerateImages {
 
     public static void process_Nike_Testing() throws Exception {
 
-        GenerateImages resize = new GenerateImages();
+        GenerateLuLuImages resize = new GenerateLuLuImages();
 
         // resize.setSourceDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black");
         // resize.setOutputDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black\\output");
@@ -689,7 +675,7 @@ public class GenerateImages {
     
     public static void process_Nike_FlyKnitRacer() throws Exception {
 
-        GenerateImages resize = new GenerateImages();
+        GenerateLuLuImages resize = new GenerateLuLuImages();
 
         // resize.setSourceDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black");
         // resize.setOutputDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black\\output");
@@ -711,7 +697,7 @@ public class GenerateImages {
     
     public static void process_Nike_BigSwoosh() throws Exception {
 
-        GenerateImages resize = new GenerateImages();
+        GenerateLuLuImages resize = new GenerateLuLuImages();
 
         // resize.setSourceDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black");
         // resize.setOutputDirectory("D:\\LivingLux\\products\\Nike\\AirMax95_Triple_Black\\output");
@@ -732,7 +718,7 @@ public class GenerateImages {
 
     public static void process_SAS() throws Exception {
 
-        GenerateImages resize = new GenerateImages();
+        GenerateLuLuImages resize = new GenerateLuLuImages();
 
         // Nike FlyKnit
         resize.setSourceDirectory("D:\\LivingLux\\products\\SAS\\bounce");
